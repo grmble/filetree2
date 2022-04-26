@@ -33,4 +33,11 @@ defmodule Filetree2.GlobTest do
     {:error, _} = Glob.regex("**suffix/*.ex")
   end
 
+  test "glob with braces" do
+    {:ok, regex} = Glob.regex("{lib,test}/**/*.ex*")
+
+    assert Regex.match?(regex, "lib/foo.ex")
+    assert Regex.match?(regex, "test/foo_test.exs")
+  end
+
 end

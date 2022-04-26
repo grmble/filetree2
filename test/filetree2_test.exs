@@ -5,7 +5,7 @@ defmodule Filetree2Test do
 
   test "comparing globbing" do
     assert Path.wildcard("lib/**/*.ex") == Filetree2.wildcard(".", "lib/**/*.ex")
-    # assert Path.wildcard("{lib,test}/**/*.ex*") == Filetree2.wildcard(".", ["{lib,test}/**/*.ex*"])
+    assert Path.wildcard("{lib,test}/**/*.ex*") == Filetree2.wildcard(".", ["{lib,test}/**/*.ex*"])
   end
 
 end
