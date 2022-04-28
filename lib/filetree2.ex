@@ -90,18 +90,22 @@ defmodule Filetree2 do
   @doc """
   List of empty directories.
 
+  The argument directory will never be returned even if its empty - only empty
+  directories that are contained in the argument directory.
+
   If you use `dotfiles :ignore` you may get false positives.
   """
   def empty_dirs(dir, opts \\ [error: :ignore, dotfiles: :keep]) do
     counts =
       stream(dir, opts)
+      # remove argument directory
+      |> Stream.drop(1)
       |> Enum.reduce(%{}, &increment_counts/2)
 
     paths =
       Map.keys(counts)
-      |> Enum.sort()
       # so entries come before containers
-      |> Enum.reverse()
+      |> Enum.sort(:desc)
 
     Enum.filter(paths, &(Map.get(counts, &1) == 0))
   end
@@ -112,18 +116,22 @@ defmodule Filetree2 do
 
   The paths are returned in descending order, so they can be removed as is.
 
+  The argument directory will never be returned even if its empty - only empty
+  directories that are contained in the argument directory.
+
   If you use `dotfiles :ignore` you may get false positives.
   """
   def empty_dirs2(dir, opts \\ [error: :ignore, dotfiles: :keep]) do
     counts =
       stream(dir, opts)
+      # remove argument directory
+      |> Stream.drop(1)
       |> Enum.reduce(%{}, &increment_counts/2)
 
     paths =
       Map.keys(counts)
-      |> Enum.sort()
       # so entries come before containers
-      |> Enum.reverse()
+      |> Enum.sort(:desc)
 
     {_, result} =
       Enum.reduce(paths, {counts, []}, fn path, {acc, result} ->

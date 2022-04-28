@@ -42,13 +42,23 @@ defmodule Filetree2Test do
     end
 
     test "should produce list of soon-to-be-empty parent directory" do
-      dirs = Filetree2.empty_dirs2("test/empty_parent")
+      dirs = Filetree2.empty_dirs2("test")
 
       assert dirs == [
                "test/empty_parent/visible",
                "test/empty_parent/.hidden",
                "test/empty_parent"
              ]
+    end
+
+    test "should not include call directory in empty_dirs result" do
+      dirs = Filetree2.empty_dirs("test/empty_parent/visible")
+      assert dirs == []
+    end
+
+    test "should not include call directory in empty_dirs2 result" do
+      dirs = Filetree2.empty_dirs2("test/empty_parent/visible")
+      assert dirs == []
     end
 
     test "should match the regex" do
