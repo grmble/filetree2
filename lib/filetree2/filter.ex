@@ -108,7 +108,6 @@ defmodule Filetree2.Filter do
   def no_slashdots?({:ok, path, _}), do: !Regex.match?(~R"/\.", path)
   def no_slashdots?(_), do: true
 
-
   @type age_unit :: :minute | :hour | :day | :week | :month | :year
   @type age :: {integer(), age_unit()}
 
@@ -123,15 +122,20 @@ defmodule Filetree2.Filter do
     end
   end
 
-  @spec to_posix(dt) :: integer() when dt: DateTime.t() | {{integer(), integer(), integer()}, {integer(), integer(), integer()}} | integer() | age()
+  @spec to_posix(dt) :: integer()
+        when dt:
+               DateTime.t()
+               | {{integer(), integer(), integer()}, {integer(), integer(), integer()}}
+               | integer()
+               | age()
   def to_posix(dt = %DateTime{}), do: DateTime.to_unix(dt)
   def to_posix(dt) when is_integer(dt), do: dt
-  def to_posix({n, :minute}), do: now() - n*60
-  def to_posix({n, :hour}), do: now() - n*3600
-  def to_posix({n, :day}), do: now() - n*3600*24
-  def to_posix({n, :week}), do: now() - n*3600*24*7
-  def to_posix({n, :month}), do: now() - n*3600*24*30
-  def to_posix({n, :year}), do: now() - n*3600*24*365
+  def to_posix({n, :minute}), do: now() - n * 60
+  def to_posix({n, :hour}), do: now() - n * 3600
+  def to_posix({n, :day}), do: now() - n * 3600 * 24
+  def to_posix({n, :week}), do: now() - n * 3600 * 24 * 7
+  def to_posix({n, :month}), do: now() - n * 3600 * 24 * 30
+  def to_posix({n, :year}), do: now() - n * 3600 * 24 * 365
 
   def to_posix({{year, month, day}, {hour, minute, second}}) do
     date = Date.new!(year, month, day)
@@ -140,5 +144,4 @@ defmodule Filetree2.Filter do
   end
 
   defp now(), do: System.os_time(:second)
-
 end

@@ -11,13 +11,14 @@ defmodule Filetree2 do
   alias Filetree2.Glob
 
   @type options :: [
-          error: :warn | :keep,
-          dotfiles: :ignore | nil,
+          error: :ignore | :keep,
+          dotfiles: :ignore | :keep,
           type: :device | :directory | :regular | :other | :symlink | nil,
           older_than: DateTime.t() | integer() | Filter.age() | nil,
+          match: Regex.t() | nil,
         ]
 
-  @default_options [error: :warn, dotfiles: :ignore]
+  @default_options [error: :ignore, dotfiles: :ignore]
 
   @spec stream(dir, opts) :: Stream.t(Core.entry()) when dir: Path.t(), opts: options()
   @doc """
@@ -27,11 +28,14 @@ defmodule Filetree2 do
     opts = Keyword.merge(@default_options, opts)
     type = Keyword.get(opts, :type)
     older_than = Keyword.get(opts, :older_than)
+    regex = Keyword.get(opts, :match)
+
     Stream.unfold(Core.init(dir), &Core.next/1)
-    |> Filter.cfilter(Keyword.get(opts, :error) == :warn, &Filter.success?/1)
+    |> Filter.cfilter(Keyword.get(opts, :error) == :ignore, &Filter.success?/1)
     |> Filter.cfilter(type !== nil, Filter.file_type_matcher(type))
     |> Filter.cfilter(Keyword.get(opts, :dotfiles) == :ignore, &Filter.no_slashdots?/1)
     |> Filter.cfilter(older_than !== nil, Filter.older_than(older_than))
+    |> Filter.cfilter(regex !== nil, Filter.simple_matcher(regex))
   end
 
   @spec filetree(dir, opts) :: Stream.t(Path.t()) when dir: Path.t(), opts: options()
@@ -68,9 +72,9 @@ defmodule Filetree2 do
   end
 
   @spec wildcard(dir, glob, opts) :: [String.t()]
-    when dir: Path.t(),
-      glob: String.t() | [String.t()],
-      opts: options()
+        when dir: Path.t(),
+             glob: String.t() | [String.t()],
+             opts: options()
   @doc """
   `Path.wildcard/2` clone using `wildcard_stream/3`
 
@@ -88,7 +92,7 @@ defmodule Filetree2 do
 
   If you use `dotfiles :ignore` you may get false positives.
   """
-  def empty_dirs(dir, opts \\ [error: :warn, dotfiles: nil, type: nil]) do
+  def empty_dirs(dir, opts \\ [error: :ignore, dotfiles: :keep]) do
     counts =
       stream(dir, opts)
       |> Enum.reduce(%{}, &increment_counts/2)
@@ -110,7 +114,7 @@ defmodule Filetree2 do
 
   If you use `dotfiles :ignore` you may get false positives.
   """
-  def empty_dirs2(dir, opts \\ [error: :warn, dotfiles: nil, type: nil]) do
+  def empty_dirs2(dir, opts \\ [error: :ignore, dotfiles: :keep]) do
     counts =
       stream(dir, opts)
       |> Enum.reduce(%{}, &increment_counts/2)
@@ -126,6 +130,7 @@ defmodule Filetree2 do
         count = Map.get(acc, path)
 
         dir = Path.dirname(path)
+
         if count == 0 && dir !== "." do
           {Map.update!(acc, dir, &(&1 - 1)), [path | result]}
         else

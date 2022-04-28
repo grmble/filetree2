@@ -42,7 +42,16 @@ defmodule Filetree2.Core do
             if stat.type == :directory do
               case File.ls(path) do
                 {:ok, files} ->
-                  acc = Enum.reduce(files, acc, &:queue.cons(Path.join(path, &1), &2))
+                  # we have to use cons for preorder traversal
+                  # reversing the entries gives us Root - Left - Right
+                  # instead of Root - Right - Left
+                  acc =
+                    Enum.reduce(
+                      Enum.reverse(files),
+                      acc,
+                      &:queue.cons(Path.join(path, &1), &2)
+                    )
+
                   {{:ok, path, stat}, acc}
 
                 {:error, posix} ->
